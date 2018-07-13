@@ -1,0 +1,31 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'distribution'
+apply from: 'libraries.gradle'
+
+group 'com.emc'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+distributions {
+    main {
+        contents {
+            from jar
+            from configurations.runtime
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile library(slf4j),
+            library(netty_4),
+            files('/workspace/storage/datasvc/libs')
+
+}
