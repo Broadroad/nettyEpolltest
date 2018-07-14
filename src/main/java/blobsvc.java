@@ -1,7 +1,10 @@
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.*;
@@ -18,12 +21,44 @@ import java.util.logging.Logger;
 public class blobsvc {
     private final static int MAX_BUF_SIZE 					= 1024;
     private int blobCount;
-    private InetSocketAddress serverAddr;
+    private String ip;
+    private int port;
+    protected ByteBufAllocator byteBufAllocator = UnpooledByteBufAllocator.DEFAULT;
+    protected Class<? extends Channel> channelClass = EpollSocketChannel.class;
+    protected volatile EpollEventLoopGroup eventLoopGroup;
+    public Bootstrap bootstrap;
+    private Channel channel;
+
 
     public blobsvc(String ip, int port, int blobCount) {
 
         this.blobCount 	= blobCount;
-        this.serverAddr 	= new InetSocketAddress(ip, port);
+        this.ip = ip;
+        this.port = port;
+
+    }
+
+    public void init() {
+        if (eventLoopGroup == null) {
+            synchronized(this) {
+                if (eventLoopGroup == null) {
+                    eventLoopGroup = new EpollEventLoopGroup(50);
+                    eventLoopGroup.setIoRatio(80);
+                }
+            }
+        }
+        Bootstrap bootstrap = new Bootstrap();
+        bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000);
+        bootstrap.option(ChannelOption.WRITE_SPIN_COUNT, 32);
+        bootstrap.option(ChannelOption.TCP_NODELAY, true);
+        bootstrap.option(ChannelOption.ALLOCATOR, byteBufAllocator);
+        bootstrap.option(EpollChannelOption.TCP_QUICKACK, true);
+
+        bootstrap.channel(channelClass);
+        bootstrap.group(eventLoopGroup);
+
+        this.bootstrap = bootstrap;
+
     }
 
     private void sendMessageToSS(SocketChannel sockch, int clientNo, int index) throws IOException {
@@ -52,7 +87,43 @@ public class blobsvc {
         fixedThreadPool.execute(new Runnable() {
             @Override
             public void run() {
-                // Connect
+                SSPromise promise = null;
+                                // Connect
+                ChannelFuture channelFuture = bootstrap.connect(ip, port);
+
+                try {
+                    channelFuture.await();
+                    if (channelFuture.isSuccess()){
+                        channel = channelFuture.channel();
+                        ByteBuf buf = Unpooled.buffer(1200);
+                        for(int i=0; i<1200; i++){
+                            buf.writeByte(i+1);
+                        }
+                        promise = new SSPromise(channel, buf);
+                        promise.setChannelFuture(channel.writeAndFlush(buf));
+
+
+                        int timeOut = 10;
+
+                        try {
+
+                            if (timeOut > 0) {
+                                if (!promise.await(timeOut)) {
+                                    System.out.println("timeout");
+                                }
+                            } else {
+                                // no timeout
+                                promise.await();
+                            }
+
+                        } catch (InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                        }
+
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
                 // loop to send request
                 send3CopyRequest();
