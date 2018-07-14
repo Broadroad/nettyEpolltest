@@ -26,6 +26,7 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compile library(slf4j),
             library(netty_4),
+            library(commons_pool2),
             files('/workspace/storage/datasvc/libs')
 
 }

@@ -5,17 +5,21 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.*;
+import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 public class blobsvc {
     private final static int MAX_BUF_SIZE 					= 1024;
     private int blobCount;
     private InetSocketAddress serverAddr;
+
     public blobsvc(String ip, int port, int blobCount) {
 
         this.blobCount 	= blobCount;
@@ -43,7 +47,20 @@ public class blobsvc {
         }
     }
 
-    private void doRun(){
+    public void startClient() {
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(blobCount);
+        fixedThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                // Connect
+
+                // loop to send request
+                send3CopyRequest();
+            }
+        });
+    }
+
+    private void send3CopyRequest(){
     }
 
     public static void main(String[] args) throws Exception {
@@ -53,6 +70,5 @@ public class blobsvc {
         } else {
             port = 8080;
         }
-        new blobsvc(port).run();
     }
 }

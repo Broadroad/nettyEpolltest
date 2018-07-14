@@ -28,6 +28,9 @@ ext {
             "log4j:log4j:1.2.16",
             "log4j:apache-log4j-extras:1.1",
     ]
+    commons_pool2 = [
+            "org.apache.commons:commons-pool2:2.2",
+    ]
     joda_time = [
             "joda-time:joda-time:2.2",
     ]
