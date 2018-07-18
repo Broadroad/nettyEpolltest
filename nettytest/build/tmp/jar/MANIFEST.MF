@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Main-Class: NettyEpollServer
+Class-Path: netty-all-4.1.12.Final.jar log4j-slf4j-impl-2.5.jar slf4j-
+ api-1.7.12.jar log4j-api-2.5.jar
+

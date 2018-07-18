@@ -1,2 +1,2 @@
 # nettyEpolltest
-test write 3 copy , whether has a slowest response
+a client and server for test netty epoll quick ack option

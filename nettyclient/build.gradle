@@ -1,0 +1,32 @@
+group 'com.emc'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'distribution'
+distributions {
+    main {
+        contents {
+            from jar
+            from configurations.runtime
+        }
+    }
+}
+sourceCompatibility = 1.5
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+    compile "io.netty:netty-all:4.1.12.Final"
+}
+jar {
+    manifest {
+        def manifestClasspath = configurations.runtime.collect { it.getName() }.join(' ')
+        attributes(
+                'Main-Class': 'NettyClient',
+                'Class-Path': manifestClasspath
+        )
+    }
+}

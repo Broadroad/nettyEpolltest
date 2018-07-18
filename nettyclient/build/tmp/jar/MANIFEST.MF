@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Main-Class: NettyClient
+Class-Path: netty-all-4.1.12.Final.jar
+
